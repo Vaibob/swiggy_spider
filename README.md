@@ -37,12 +37,13 @@ pip install -r requirements.txt
 
 1. Open your terminal and navigate to the project directory.
 2. Run the following command while in `spiders` directory to start the spider.
-
 ```
  scrapy crawl swiggy
 ``` 
 
 The spider will generate a `restaurant_data.csv` file containing the scraped data, segregated by city.
+
+NOTE: The `spiders` directory has a file named `swiggy_spider` which has all the scraping code
 
 ---
 
