@@ -26,17 +26,17 @@ def fetch_data(lat, lng, offset):
         "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"
     }
     response = requests.post(url, json=payload, headers=headers)
-    card_data = response.json().get('data', {}).get('cards', [])
+    card_data = response.json().get('data', {}).get('cards', []) 
     
     if card_data:
         restaurant_list = card_data[0].get('card', {}).get('card', {}).get('gridElements', {}).get('infoWithStyle', {}).get('restaurants', [])
         return restaurant_list
     return []
 
-global_id = 1  # Initialize a global ID counter at the top of your script
+global_id = 1 # Initializing the global counter
 
 def write_to_csv(data, city, header_written):
-    global global_id  # Declare the variable as global so we can modify it
+    global global_id # Using the global counter to assign unique IDs to the restaurants
     mode = 'a' if header_written else 'w'
     with open('output.csv', mode, newline='') as csvfile:
         fieldnames = ['ID', 'City', 'Restaurant Name', 'Area Name', 'Cost for Two', 'Cuisines', 'Average Rating', 'Total Ratings', 'Is Open', 'Next Close Time', 'Aggregated Discount Info', 'Restaurant Link']
@@ -109,7 +109,7 @@ def get_combined_place_info(city_names):
     return result_data
 
 if __name__ == "__main__":
-    city_names = ["Pune","Mumbai", "Delhi", "Bangalore"]
+    city_names = ["Pune","Mumbai", "Delhi", "Bangalore"] # We can add more cities to this list
     place_info_list = get_combined_place_info(city_names)
     
     header_written = False
@@ -125,5 +125,31 @@ if __name__ == "__main__":
             offset = i * 25  # We can adjust offset as per our requirement
             restaurant_list = fetch_data(lat, lng, offset)
             if restaurant_list:
-                write_to_csv(restaurant_list, city, header_written)
+                write_to_csv(restaurant_list, city, header_written) 
                 header_written = True
+
+"""
+The script aims to scrape restaurant data from Swiggy for various cities.
+
+1. Initialization:
+    - Libraries such as `requests`, `csv`, and `json` are imported to aid in web requests and data processing.
+    - A global counter named `global_id` is initialized to assign unique IDs to the restaurants.
+
+2. Function Descriptions:
+    - `fetch_data`: Retrieves the list of restaurants for a given latitude and longitude.
+      Uses Swiggy's internal API to get restaurant details. The API expects certain parameters like latitude, longitude, and offset.
+    
+    - `write_to_csv`: Writes the restaurant data into a CSV file named 'output.csv'. 
+      The structure of the CSV consists of fields such as ID, City, Restaurant Name, etc.
+    
+    - `get_combined_place_info`: This function fetches the latitude and longitude of a city using Swiggy's autocomplete and recommend APIs. It returns a list with the name of the city, its place ID, latitude, longitude, and formatted address.
+    
+3. Execution Flow:
+    - The `city_names` list contains names of cities for which data needs to be fetched.
+    - For each city in `city_names`, the `get_combined_place_info` function is called to get the latitude and longitude.
+    - For each set of coordinates, the script fetches restaurant data multiple times (determined by `num_scrolls`).
+    - All the fetched data is written into a CSV file, with unique IDs and ensuring no duplication.
+
+Note: The script uses some hardcoded values (like `num_scrolls`) and headers, which may need periodic updates based on Swiggy's website changes.
+"""
+
