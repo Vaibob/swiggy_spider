@@ -33,13 +33,13 @@ def fetch_data(lat, lng, offset):
         return restaurant_list
     return []
 
-global_id = 1 # Initializing the global counter
+global_id = 1  # Initializing the global counter
 
 def write_to_csv(data, city, header_written):
-    global global_id # Using the global counter to assign unique IDs to the restaurants
+    global global_id  # Using the global counter to assign unique IDs to the restaurants
     mode = 'a' if header_written else 'w'
     with open('output.csv', mode, newline='') as csvfile:
-        fieldnames = ['ID', 'City', 'Restaurant Name', 'Area Name', 'Cost for Two', 'Cuisines', 'Average Rating', 'Total Ratings', 'Is Open', 'Next Close Time', 'Aggregated Discount Info', 'Restaurant Link']
+        fieldnames = ['ID', 'City', 'Restaurant Name', 'Area Name', 'Cost for Two', 'Cuisines', 'Average Rating', 'Total Ratings', 'Is Open', 'Next Close Time', 'Aggregated Discount Info','Serviceability', 'Restaurant Link']
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         
         if not header_written:
@@ -48,7 +48,8 @@ def write_to_csv(data, city, header_written):
         for idx, restaurant in enumerate(data, global_id):
             info = restaurant.get('info', {})
             cta = restaurant.get('cta', {})
-            
+            sla_info = info.get('sla', {})  
+
             writer.writerow({
                 'ID': idx,
                 'City': city,
@@ -61,10 +62,12 @@ def write_to_csv(data, city, header_written):
                 'Is Open': info.get('isOpen'),
                 'Next Close Time': info.get('availability', {}).get('nextCloseTime'),
                 'Aggregated Discount Info': info.get('aggregatedDiscountInfoV3', {}).get('header'),
+                'Serviceability': sla_info.get('serviceability', 'N/A'),  
                 'Restaurant Link': cta.get('link')
             })
         
-        global_id = idx + 1  
+        global_id = idx + 1
+
 
 def get_combined_place_info(city_names):
     autocomplete_url = "https://www.swiggy.com/dapi/misc/place-autocomplete"
@@ -97,23 +100,36 @@ def get_combined_place_info(city_names):
                     recommend_data = recommend_response.json()
                     if recommend_data.get("statusCode") == 0 and "data" in recommend_data:
                         for recommend_info in recommend_data["data"]:
-                            city_data = {
+                            # The main latitude and longitude for the location
+                            city_data_main = {
                                 "city_name": city_name,
                                 "place_id": place_id,
                                 "lat": recommend_info["geometry"]["location"]["lat"],
                                 "lng": recommend_info["geometry"]["location"]["lng"],
                                 "formatted_address": recommend_info["formatted_address"]
                             }
-                            result_data.append(city_data)
-
+                            result_data.append(city_data_main)
+                            
+                            # Additional latitude and longitude pairs from "bounds"
+                            additional_bounds = recommend_info.get('address_components', [{}])[-1].get('bounds', [])
+                            for bound in additional_bounds:
+                                city_data_bound = {
+                                    "city_name": city_name,
+                                    "place_id": place_id,
+                                    "lat": bound["lat"],
+                                    "lng": bound["lng"],
+                                    "formatted_address": recommend_info["formatted_address"] + " (Additional)"
+                                }
+                                result_data.append(city_data_bound)
     return result_data
 
+
 if __name__ == "__main__":
-    city_names = ["Pune","Mumbai", "Delhi", "Bangalore"] # We can add more cities to this list
+    city_names = ["Pune"]
     place_info_list = get_combined_place_info(city_names)
     
     header_written = False
-    num_scrolls = 10 # We can adjust the number of scrolls as per our requirement
+    num_scrolls = 25
 
     for place_info in place_info_list:
         lat = place_info['lat']
@@ -121,12 +137,14 @@ if __name__ == "__main__":
         city = place_info['city_name']
         
         for i in range(num_scrolls):
-            print(f"Fetching data for {city}, scroll number {i+1}")
-            offset = i * 25  # We can adjust offset as per our requirement
-            restaurant_list = fetch_data(lat, lng, offset)
+            print(f"Fetching data for {city} at latitude {lat}, longitude {lng}, scroll number {i + 1}")
+            offset = i * 25  # The offset parameter for the API call
+            restaurant_list = fetch_data(lat, lng, offset)  
+            
             if restaurant_list:
-                write_to_csv(restaurant_list, city, header_written) 
+                write_to_csv(restaurant_list, city, header_written)
                 header_written = True
+
 
 """
 The script aims to scrape restaurant data from Swiggy for various cities.
