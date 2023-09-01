@@ -35,6 +35,47 @@ def fetch_data(lat, lng, offset):
 
 global_id = 1  # Initializing the global counter
 
+unique_restaurants = set() # Initializing a set to store unique restaurants
+
+def write_to_csv(data, city, header_written):
+    global global_id  # Using the global counter to assign unique IDs to the restaurants
+    mode = 'a' if header_written else 'w'
+    with open('output.csv', mode, newline='') as csvfile:
+        fieldnames = ['ID', 'City', 'Restaurant Name', 'Area Name', 'Cost for Two', 'Cuisines', 'Average Rating', 'Total Ratings', 'Is Open', 'Next Close Time', 'Aggregated Discount Info','Serviceability', 'Restaurant Link']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        
+        if not header_written:
+            writer.writeheader()
+
+        for idx, restaurant in enumerate(data, global_id):
+            info = restaurant.get('info', {})
+            cta = restaurant.get('cta', {})
+            sla_info = info.get('sla', {})  
+
+            # Create a unique identifier for each restaurant
+            unique_identifier = (info.get('name'), lat, lng, info.get('areaName'))
+            if unique_identifier not in unique_restaurants:
+                unique_restaurants.add(unique_identifier)
+
+                writer.writerow({
+                    'ID': idx,
+                    'City': city,
+                    'Restaurant Name': info.get('name'),
+                    'Area Name': info.get('areaName'),
+                    'Cost for Two': info.get('costForTwo'),
+                    'Cuisines': ', '.join(info.get('cuisines', [])),
+                    'Average Rating': info.get('avgRating'),
+                    'Total Ratings': info.get('totalRatingsString'),
+                    'Is Open': info.get('isOpen'),
+                    'Next Close Time': info.get('availability', {}).get('nextCloseTime'),
+                    'Aggregated Discount Info': info.get('aggregatedDiscountInfoV3', {}).get('header'),
+                    'Serviceability': sla_info.get('serviceability', 'N/A'),  
+                    'Restaurant Link': cta.get('link')
+                })
+        
+            global_id = idx + 1
+
+"""
 def write_to_csv(data, city, header_written):
     global global_id  # Using the global counter to assign unique IDs to the restaurants
     mode = 'a' if header_written else 'w'
@@ -67,7 +108,7 @@ def write_to_csv(data, city, header_written):
             })
         
         global_id = idx + 1
-
+"""
 def get_combined_place_info(city_names):
     autocomplete_url = "https://www.swiggy.com/dapi/misc/place-autocomplete"
     recommend_url = "https://www.swiggy.com/dapi/misc/address-recommend"
@@ -124,7 +165,8 @@ def get_combined_place_info(city_names):
 
 
 if __name__ == "__main__":
-    city_names = ["Pune","Mumbai","Delhi","Banglore"]
+    #city_names = ["Pune","Mumbai","Delhi","Banglore"]
+    city_names = ["Pune"]
     place_info_list = get_combined_place_info(city_names)
     
     header_written = False
