@@ -68,7 +68,6 @@ def write_to_csv(data, city, header_written):
         
         global_id = idx + 1
 
-
 def get_combined_place_info(city_names):
     autocomplete_url = "https://www.swiggy.com/dapi/misc/place-autocomplete"
     recommend_url = "https://www.swiggy.com/dapi/misc/address-recommend"
@@ -110,26 +109,26 @@ def get_combined_place_info(city_names):
                             }
                             result_data.append(city_data_main)
                             
-                            # Additional latitude and longitude pairs from "bounds"
-                            additional_bounds = recommend_info.get('address_components', [{}])[-1].get('bounds', [])
-                            for bound in additional_bounds:
-                                city_data_bound = {
+                            # The latitude and longitude for the northeast and southwest corners of the viewport
+                            viewport = recommend_info.get('geometry', {}).get('viewport', {})
+                            for key in ['northeast', 'southwest']:
+                                city_data_viewport = {
                                     "city_name": city_name,
                                     "place_id": place_id,
-                                    "lat": bound["lat"],
-                                    "lng": bound["lng"],
-                                    "formatted_address": recommend_info["formatted_address"] + " (Additional)"
+                                    "lat": viewport.get(key, {}).get('lat', None),
+                                    "lng": viewport.get(key, {}).get('lng', None),
+                                    "formatted_address": recommend_info["formatted_address"] + f" ({key.capitalize()} of Viewport)"
                                 }
-                                result_data.append(city_data_bound)
+                                result_data.append(city_data_viewport)
     return result_data
 
 
 if __name__ == "__main__":
-    city_names = ["Pune"]
+    city_names = ["Pune","Mumbai","Delhi","Banglore"]
     place_info_list = get_combined_place_info(city_names)
     
     header_written = False
-    num_scrolls = 25
+    num_scrolls = 10
 
     for place_info in place_info_list:
         lat = place_info['lat']
@@ -144,7 +143,6 @@ if __name__ == "__main__":
             if restaurant_list:
                 write_to_csv(restaurant_list, city, header_written)
                 header_written = True
-
 
 """
 The script aims to scrape restaurant data from Swiggy for various cities.
