@@ -126,6 +126,26 @@ def get_combined_place_info(city_names):
 if __name__ == "__main__":
     #city_names = ["Pune","Mumbai","Delhi","Banglore"]
     city_names = ["Pune"]
+    #Below are the set of lat/lng for Pune City
+    """
+			"place_id": "ChIJARFGZy6_wjsRQ-Oenb9DjYI",
+			"geometry": {
+				"location": {
+					"lat": 18.5204303,
+					"lng": 73.8567437
+				},
+				"location_type": "APPROXIMATE",
+				"viewport": {
+					"northeast": {
+						"lat": 18.6357545,
+						"lng": 73.9864569
+					},
+					"southwest": {
+						"lat": 18.4134784,
+						"lng": 73.7394779
+					}
+				}
+    """
     place_info_list = get_combined_place_info(city_names)
     
     header_written = False
@@ -144,33 +164,24 @@ if __name__ == "__main__":
             if restaurant_list:
                 write_to_csv(restaurant_list, city, header_written)
                 header_written = True
-            """
-            else:
-                print("No more data to fetch. Exiting loop.")
-                break  # Break the loop if restaurant_list is empty """
 
 """
-The script aims to scrape restaurant data from Swiggy for various cities.
+1. Starting Off:
+    - I used Python libraries like `requests` for making web calls, `csv` for file operations, and `json` for data handling.
+    - A counter called `global_id` is used to give a unique ID to each restaurant.
 
-1. Initialization:
-    - Libraries such as `requests`, `csv`, and `json` are imported to aid in web requests and data processing.
-    - A global counter named `global_id` is initialized to assign unique IDs to the restaurants.
+2. Functions Explained:
+    - `fetch_data`: This function talks to Swiggy's system and gets restaurant info for a given location (latitude and longitude).
+    - `write_to_csv`: This function saves the restaurant info into a file named 'output.csv'. This file will have columns like ID, City, Restaurant Name, and so on.
+    - `get_combined_place_info`: This one finds out the latitude and longitude for a city. It uses Swiggy's own tools to get this info and returns a list that includes the city name, latitude, longitude, and a formatted address.
 
-2. Function Descriptions:
-    - `fetch_data`: Retrieves the list of restaurants for a given latitude and longitude.
-      Uses Swiggy's internal API to get restaurant details. The API expects certain parameters like latitude, longitude, and offset.
-    
-    - `write_to_csv`: Writes the restaurant data into a CSV file named 'output.csv'. 
-      The structure of the CSV consists of fields such as ID, City, Restaurant Name, etc.
-    
-    - `get_combined_place_info`: This function fetches the latitude and longitude of a city using Swiggy's autocomplete and recommend APIs. It returns a list with the name of the city, its place ID, latitude, longitude, and formatted address.
-    
-3. Execution Flow:
-    - The `city_names` list contains names of cities for which data needs to be fetched.
-    - For each city in `city_names`, the `get_combined_place_info` function is called to get the latitude and longitude.
-    - For each set of coordinates, the script fetches restaurant data multiple times (determined by `num_scrolls`).
-    - All the fetched data is written into a CSV file, with unique IDs and ensuring no duplication.
+3. How it Works:
+    - I have a list named `city_names` that has the names of the cities we are interested in.
+    - The script first uses `get_combined_place_info` to find out the latitude and longitude for each city.
+    - It then goes through these coordinates and uses `fetch_data` to get restaurant info. It does this multiple times to collect as much data as possible.
+    - Finally, all this data is written into a CSV file. Each restaurant gets a unique ID, and we make sure there are no duplicates.
 
-Note: The script uses some hardcoded values (like `num_scrolls`) and headers, which may need periodic updates based on Swiggy's website changes.
+4. The Output:
+    - The output CSV file has the following columns: ID, City, Restaurant Name, Area Name, Cost for Two, Cuisines, Average Rating, Total Ratings, Is Open, Next Close Time, Aggregated Discount Info, Serviceability, Restaurant Link.
 """
 
